@@ -29,9 +29,9 @@ interface UserTurn {
 type Turn = AssistantTurn | UserTurn;
 
 const SUGGESTIONS = [
-  "¿Cuántos agentes hay corriendo en Linux?",
-  "Lista los workspaces con enforcement habilitado.",
-  "Muestra los flujos desde 10.27.204.40 en la última hora.",
+  "How many agents are running on Linux?",
+  "List workspaces with enforcement enabled.",
+  "Show flows from 10.27.204.40 in the last hour.",
 ];
 
 export function ChatPage() {
@@ -102,8 +102,8 @@ export function ChatPage() {
 
   return (
     <Card
-      title="Chat con Claude"
-      subtitle="Pregunta lo que quieras sobre tu despliegue de CSW. Claude generará el código y te mostrará el resultado."
+      title="Chat with Claude"
+      subtitle="Ask anything about your CSW deployment. Claude will generate the code and show you the result."
       actions={
         <button
           type="button"
@@ -111,7 +111,7 @@ export function ChatPage() {
           disabled={busy || turns.length === 0}
           className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-3 py-1 text-xs text-muted hover:text-white disabled:opacity-50"
         >
-          <RefreshCw className="h-3.5 w-3.5" aria-hidden /> Reiniciar
+          <RefreshCw className="h-3.5 w-3.5" aria-hidden /> Reset
         </button>
       }
     >
@@ -159,7 +159,7 @@ export function ChatPage() {
               send(input);
             }
           }}
-          placeholder="Escribe tu pregunta. Enter para enviar, Shift+Enter para salto de línea."
+          placeholder="Type your question. Enter to send, Shift+Enter for a new line."
           rows={2}
           className="flex-1 resize-none rounded-md border border-surface-border bg-surface-secondary/40 p-3 text-sm text-white placeholder:text-muted-dim focus:border-cisco-blue focus:outline-none"
           disabled={busy}
@@ -174,7 +174,7 @@ export function ChatPage() {
           }`}
         >
           <Send className="h-4 w-4" aria-hidden />
-          Enviar
+          Send
         </button>
       </form>
     </Card>
@@ -244,7 +244,7 @@ function EmptyChat({
   return (
     <div className="rounded-lg border border-dashed border-surface-border/60 bg-surface-secondary/20 p-6 text-sm text-muted">
       <p>
-        Pregunta lo que necesites sobre tu deployment. Algunas ideas para empezar:
+        Ask anything about your deployment. Some ideas to get you started:
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         {SUGGESTIONS.map((s) => (
@@ -280,9 +280,9 @@ function AssistantBubble({ turn }: { turn: AssistantTurn }) {
         {turn.text ? (
           <p className="whitespace-pre-wrap">{turn.text}</p>
         ) : turn.thinking ? (
-          <p className="text-muted">Pensando…</p>
+          <p className="text-muted">Thinking…</p>
         ) : (
-          <p className="text-muted">(sin texto)</p>
+          <p className="text-muted">(no text)</p>
         )}
         {turn.warning && (
           <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-cisco-yellow">
@@ -311,16 +311,16 @@ function CodePanel({ block }: { block: CodeBlock }) {
     <div className="rounded-lg border border-surface-border/60 bg-surface-secondary/40">
       <div className="flex items-center justify-between border-b border-surface-border/50 px-3 py-2">
         <span className="text-[11px] font-medium uppercase tracking-wider text-muted">
-          Código generado
+          Generated code
         </span>
         {block.sandbox &&
           (sandboxOk ? (
             <span className="inline-flex items-center gap-1.5 text-[11px] text-cisco-green">
-              <Shield className="h-3 w-3" aria-hidden /> Sandbox: aprobado
+              <Shield className="h-3 w-3" aria-hidden /> Sandbox: passed
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 text-[11px] text-cisco-red">
-              <ShieldAlert className="h-3 w-3" aria-hidden /> Sandbox: bloqueado
+              <ShieldAlert className="h-3 w-3" aria-hidden /> Sandbox: blocked
             </span>
           ))}
       </div>
@@ -329,19 +329,19 @@ function CodePanel({ block }: { block: CodeBlock }) {
       </pre>
       {block.sandbox && !sandboxOk && (
         <div className="border-t border-surface-border/50 px-3 py-2 text-[11px] text-cisco-red">
-          Motivo: {block.sandbox.violations.join("; ") || "—"}
+          Reason: {block.sandbox.violations.join("; ") || "—"}
         </div>
       )}
       {block.output && (
         <div className="border-t border-surface-border/50">
           <div className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted">
-            Salida
+            Output
           </div>
           {block.output.error && (
             <p className="px-3 pb-2 text-xs text-cisco-red">{block.output.error}</p>
           )}
           <pre className="max-h-[320px] overflow-auto px-3 pb-3 font-mono text-[11px] leading-snug text-white">
-            {block.output.stdout || "(sin salida)"}
+            {block.output.stdout || "(no output)"}
           </pre>
         </div>
       )}

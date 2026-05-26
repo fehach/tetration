@@ -8,25 +8,25 @@ const SHORTCUTS = [
   {
     to: "/queries",
     icon: Wrench,
-    title: "Ejecutar consultas",
+    title: "Run queries",
     description:
-      "Catálogo de informes locales: agentes, workspaces, enforcement, vulnerabilidades.",
-    cta: "Abrir consultas",
+      "Local report catalog: agents, workspaces, enforcement, vulnerabilities.",
+    cta: "Open queries",
   },
   {
     to: "/chat",
     icon: MessageSquare,
-    title: "Preguntar a Claude",
+    title: "Ask Claude",
     description:
-      "Conversa en lenguaje natural. Claude genera código, lo valida y muestra el resultado.",
-    cta: "Abrir chat",
+      "Converse in natural language. Claude generates code, validates it, and shows the result.",
+    cta: "Open chat",
   },
   {
     to: "/configuration",
     icon: Settings,
-    title: "Configuración",
-    description: "Estado de la conexión, modelo en uso, modo seguro.",
-    cta: "Ver configuración",
+    title: "Configuration",
+    description: "Connection status, active model, safe mode.",
+    cta: "View configuration",
   },
 ];
 
@@ -39,25 +39,25 @@ export function HomePage() {
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-white">
-              Bienvenido al panel del CSW Agent
+              Welcome to the CSW Agent Dashboard
             </h2>
             <p className="mt-1 text-sm text-muted">
-              Ejecuta consultas locales sobre tu despliegue de Cisco Secure Workload o pide
-              a Claude que las genere por ti.
+              Run local queries on your Cisco Secure Workload deployment or ask Claude to
+              generate them for you.
             </p>
           </div>
           <div className="flex flex-col items-start gap-1 md:items-end">
-            <span className="text-[11px] uppercase tracking-wider text-muted">Estado</span>
+            <span className="text-[11px] uppercase tracking-wider text-muted">Status</span>
             <span
               className={`text-sm font-medium ${
                 health?.csw_connected ? "text-cisco-green" : "text-cisco-yellow"
               }`}
             >
               {health?.csw_connected
-                ? "CSW conectado"
+                ? "CSW connected"
                 : health
-                  ? "Sin conexión a CSW"
-                  : "Comprobando…"}
+                  ? "CSW not connected"
+                  : "Checking…"}
             </span>
             <span className="text-xs text-muted-dim">{health?.endpoint ?? "—"}</span>
           </div>
@@ -86,24 +86,24 @@ export function HomePage() {
         ))}
       </div>
 
-      <Card title="Cómo funciona">
+      <Card title="How it works">
         <ol className="space-y-3 text-sm text-muted">
           <li>
-            <strong className="text-white">Consultas:</strong> ejecuta informes pre-construidos
-            (no requieren conocer la API). Algunas piden un dato como nombre de workspace o IP.
+            <strong className="text-white">Queries:</strong> run pre-built reports (no API
+            knowledge needed). Some require an input like a workspace name or IP.
           </li>
           <li>
-            <strong className="text-white">Chat con Claude:</strong> describe lo que quieres en
-            español o inglés. Claude genera el código necesario, el sandbox lo valida, y se
-            ejecuta solo si es seguro.
+            <strong className="text-white">Chat with Claude:</strong> describe what you want in
+            natural language. Claude generates the code, the sandbox validates it, and it only
+            runs if safe.
           </li>
           <li>
-            <strong className="text-white">CSV:</strong> los informes pueden generar archivos
-            CSV descargables directamente desde el resultado.
+            <strong className="text-white">CSV:</strong> reports can generate downloadable CSV
+            files directly from the result.
           </li>
           <li>
-            <strong className="text-white">Modo seguro:</strong> bloquea operaciones
-            destructivas (DELETE, modificaciones). Mantenlo siempre activado salvo necesidad.
+            <strong className="text-white">Safe mode:</strong> blocks destructive operations
+            (DELETE, modifications). Keep it enabled unless needed.
           </li>
         </ol>
       </Card>

@@ -1,11 +1,11 @@
 # CSW Agent Dashboard
 
-Front-end web del agente CSW. Permite a usuarios sin línea de comandos:
-- ejecutar **consultas locales** del catálogo (16 informes pre-construidos),
-- **conversar con Claude** vía ClaudeGate, con código generado, validado por sandbox y ejecutado en vivo,
-- gestionar la **configuración** del agente (modo seguro, etc.).
+Web front-end for the CSW agent. Allows users without a command line to:
+- run **local queries** from the catalog (16 pre-built reports),
+- **chat with Claude** via ClaudeGate, with generated code validated by the sandbox and executed live,
+- manage the agent **configuration** (safe mode, etc.).
 
-Vite + React + TypeScript + Tailwind, con paleta Cisco definida en [`CLAUDE.md`](../CLAUDE.md).
+Vite + React + TypeScript + Tailwind, with the Cisco palette defined in [`CLAUDE.md`](../CLAUDE.md).
 
 ## Develop
 
@@ -33,15 +33,15 @@ After building, `csw-agent dashboard` serves the SPA from `/` and the API from `
 
 - React 18 + TypeScript
 - Vite
-- Tailwind CSS (paleta Cisco en `tailwind.config.ts`)
+- Tailwind CSS (Cisco palette in `tailwind.config.ts`)
 - Lucide React icons
-- React Router (Inicio · Consultas · Chat · Configuración)
+- React Router (Home · Queries · Chat · Configuration)
 
-## Páginas
+## Pages
 
-| Página | Para qué sirve |
+| Page | Description |
 |---|---|
-| **Inicio** | Bienvenida con accesos rápidos y estado de conexión |
-| **Consultas** | Catálogo de 16 informes locales, agrupados por categoría. Cada card incluye los inputs necesarios y un botón Ejecutar. El resultado se muestra inline (tabla nativa para informes estructurados, monoespaciado para los demás), con descarga de CSVs cuando aplica |
-| **Chat con Claude** | Conversación en lenguaje natural. SSE muestra: texto en streaming → código generado → resultado del sandbox (aprobado/bloqueado) → salida capturada al ejecutar |
-| **Configuración** | Toggle de modo seguro + datos solo-lectura (endpoint, credenciales, modelo, ClaudeGate URL, TLS) |
+| **Home** | Welcome screen with quick-access shortcuts and connection status |
+| **Queries** | Catalog of 16 local reports grouped by category. Each card includes the required inputs and a Run button. Results are shown inline (native table for structured reports, monospaced for others), with CSV download when available |
+| **Chat with Claude** | Natural language conversation. SSE streams: text → generated code → sandbox result (passed/blocked) → captured output |
+| **Configuration** | Safe mode toggle + read-only data (endpoint, credentials, model, ClaudeGate URL, TLS) |

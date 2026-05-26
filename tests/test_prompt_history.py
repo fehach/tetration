@@ -9,10 +9,10 @@ from csw_agent.dashboard.prompt_history import PromptHistory
 
 def test_add_and_list(tmp_path: Path):
     h = PromptHistory(path=tmp_path / "history.jsonl")
-    h.add("¿cuántos agentes?")
-    h.add("muestra workspaces")
+    h.add("how many agents?")
+    h.add("show workspaces")
     listed = h.list()
-    assert [e.message for e in listed] == ["muestra workspaces", "¿cuántos agentes?"]
+    assert [e.message for e in listed] == ["show workspaces", "how many agents?"]
 
 
 def test_list_limit(tmp_path: Path):
@@ -24,9 +24,9 @@ def test_list_limit(tmp_path: Path):
 
 def test_persists_across_instances(tmp_path: Path):
     path = tmp_path / "history.jsonl"
-    PromptHistory(path=path).add("hola")
+    PromptHistory(path=path).add("hello")
     reloaded = PromptHistory(path=path)
-    assert [e.message for e in reloaded.list()] == ["hola"]
+    assert [e.message for e in reloaded.list()] == ["hello"]
 
 
 def test_cap_max_entries(tmp_path: Path):

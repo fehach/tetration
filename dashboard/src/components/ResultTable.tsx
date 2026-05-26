@@ -69,7 +69,7 @@ export function ResultTable({ table }: Props) {
                   colSpan={table.columns.length}
                   className="px-3 py-6 text-center text-muted"
                 >
-                  Sin resultados.
+                  No results.
                 </td>
               </tr>
             ) : (
@@ -99,6 +99,6 @@ export function ResultTable({ table }: Props) {
 function formatCell(value: unknown): string {
   if (value == null || value === "") return "—";
   if (typeof value === "number") return value.toLocaleString();
-  if (typeof value === "boolean") return value ? "Sí" : "No";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
   return String(value);
 }

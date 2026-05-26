@@ -12,13 +12,13 @@ interface Props {
 
 function relative(timestamp: number): string {
   const seconds = Math.max(0, Math.floor((Date.now() / 1000) - timestamp));
-  if (seconds < 60) return "hace segundos";
+  if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `hace ${minutes} min`;
+  if (minutes < 60) return `${minutes} min ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `hace ${hours} h`;
+  if (hours < 24) return `${hours} h ago`;
   const days = Math.floor(hours / 24);
-  return `hace ${days} d`;
+  return `${days} d ago`;
 }
 
 export function PromptHistoryPanel({ entries, loading, disabled, onSelect, onClear }: Props) {
@@ -33,7 +33,7 @@ export function PromptHistoryPanel({ entries, loading, disabled, onSelect, onCle
           className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted hover:text-white"
         >
           <History className="h-3.5 w-3.5" aria-hidden />
-          Historial de prompts
+          Prompt history
           <span className="rounded-full bg-surface-card px-2 py-0.5 text-[10px] text-muted-dim">
             {entries.length}
           </span>
@@ -45,17 +45,17 @@ export function PromptHistoryPanel({ entries, loading, disabled, onSelect, onCle
             disabled={disabled}
             className="inline-flex items-center gap-1 text-[11px] text-muted hover:text-cisco-red disabled:opacity-50"
           >
-            <Trash2 className="h-3 w-3" aria-hidden /> Limpiar
+            <Trash2 className="h-3 w-3" aria-hidden /> Clear
           </button>
         )}
       </header>
       {expanded && (
         <div className="border-t border-surface-border/40 px-2 py-2">
           {loading ? (
-            <p className="px-2 py-3 text-xs text-muted">Cargando…</p>
+            <p className="px-2 py-3 text-xs text-muted">Loading…</p>
           ) : entries.length === 0 ? (
             <p className="px-2 py-3 text-xs text-muted">
-              Aún no has enviado preguntas. Las que envíes aparecerán aquí para reutilizarlas.
+              No prompts yet. Questions you send will appear here for quick reuse.
             </p>
           ) : (
             <ul className="max-h-[180px] space-y-1 overflow-y-auto">

@@ -217,10 +217,10 @@ def test_chat_reset_and_history(offline_client: TestClient):
 def test_prompt_history_endpoints(offline_client: TestClient):
     from csw_agent.dashboard.prompt_history import get_history
 
-    get_history().add("¿cuántos agentes?")
-    get_history().add("muestra workspaces")
+    get_history().add("how many agents?")
+    get_history().add("show workspaces")
     resp = offline_client.get("/api/chat/prompts").json()
-    assert [r["message"] for r in resp] == ["muestra workspaces", "¿cuántos agentes?"]
+    assert [r["message"] for r in resp] == ["show workspaces", "how many agents?"]
 
     cleared = offline_client.delete("/api/chat/prompts").json()
     assert cleared == {"ok": True}

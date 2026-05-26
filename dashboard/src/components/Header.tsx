@@ -8,9 +8,9 @@ export function Header() {
   const cswState = health ? (health.csw_connected ? "ok" : "warn") : "info";
   const cswLabel = health
     ? health.csw_connected
-      ? "CSW conectado"
-      : "CSW sin conexión"
-    : "Conectando…";
+      ? "CSW connected"
+      : "CSW disconnected"
+    : "Connecting…";
 
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-surface-border bg-surface-sidebar/80 px-6 backdrop-blur">
@@ -27,7 +27,7 @@ export function Header() {
         <StatusBadge state={cswState} label={cswLabel} />
         <StatusBadge
           state={health?.safe_mode ? "ok" : "warn"}
-          label={health?.safe_mode ? "Modo seguro" : "Modo seguro OFF"}
+          label={health?.safe_mode ? "Safe mode" : "Safe mode OFF"}
         />
       </div>
     </header>

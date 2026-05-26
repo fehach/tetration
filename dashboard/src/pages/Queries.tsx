@@ -82,7 +82,7 @@ export function QueriesPage() {
   }
   if (!queries) {
     return (
-      <Card title="Cargando consultas…">
+      <Card title="Loading queries…">
         <Loader2 className="h-5 w-5 animate-spin text-cisco-blue" aria-hidden />
       </Card>
     );
@@ -146,7 +146,7 @@ export function QueriesPage() {
                       ) : (
                         <Play className="h-3.5 w-3.5" aria-hidden />
                       )}
-                      {queryState.loading ? "Ejecutando…" : "Ejecutar"}
+                      {queryState.loading ? "Running…" : "Run"}
                     </button>
                     {queryState.result && (
                       <button
@@ -158,11 +158,11 @@ export function QueriesPage() {
                       >
                         {queryState.expanded ? (
                           <>
-                            <ChevronUp className="h-3.5 w-3.5" aria-hidden /> Ocultar
+                            <ChevronUp className="h-3.5 w-3.5" aria-hidden /> Hide
                           </>
                         ) : (
                           <>
-                            <ChevronDown className="h-3.5 w-3.5" aria-hidden /> Mostrar
+                            <ChevronDown className="h-3.5 w-3.5" aria-hidden /> Show
                           </>
                         )}
                       </button>
@@ -235,7 +235,7 @@ function StdoutResultView({ data }: { data: StdoutResult }) {
         </div>
       )}
       <pre className="max-h-[480px] overflow-auto rounded-md border border-surface-border bg-surface-background/80 p-3 font-mono text-[11px] leading-snug text-white">
-        {data.stdout || "(sin salida)"}
+        {data.stdout || "(no output)"}
       </pre>
       {data.files.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -262,6 +262,6 @@ function humanize(s: string): string {
 
 function formatSummaryValue(value: unknown): string {
   if (typeof value === "number") return value.toLocaleString();
-  if (typeof value === "boolean") return value ? "Sí" : "No";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
   return String(value ?? "—");
 }

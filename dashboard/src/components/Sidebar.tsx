@@ -2,10 +2,10 @@ import { Home, MessageSquare, Settings, Sparkles, Wrench } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const NAV_ITEMS = [
-  { to: "/", label: "Inicio", icon: Home },
-  { to: "/queries", label: "Consultas", icon: Wrench },
-  { to: "/chat", label: "Chat con Claude", icon: MessageSquare },
-  { to: "/configuration", label: "Configuración", icon: Settings },
+  { to: "/", label: "Home", icon: Home },
+  { to: "/queries", label: "Queries", icon: Wrench },
+  { to: "/chat", label: "Chat with Claude", icon: MessageSquare },
+  { to: "/configuration", label: "Configuration", icon: Settings },
 ];
 
 // Watermark shown at the bottom of the sidebar. Edit the constants below
@@ -23,7 +23,7 @@ export function Sidebar() {
           </div>
           <div>
             <p className="text-sm font-semibold text-white">CSW Agent</p>
-            <p className="text-[11px] text-muted">Asistente operacional</p>
+            <p className="text-[11px] text-muted">Operational assistant</p>
           </div>
         </div>
       </div>
@@ -50,10 +50,10 @@ export function Sidebar() {
         <div className="flex items-center gap-1.5 text-[11px] text-muted-dim">
           <Sparkles className="h-3 w-3 text-cisco-blue" aria-hidden />
           <span>
-            Hecho por <span className="text-white">{AUTHOR_NAME}</span> con asistencia de IA
+            Built by <span className="text-white">{AUTHOR_NAME}</span> with AI assistance
           </span>
         </div>
-        <p className="mt-1 text-[10px] text-muted-dim">© {PRODUCT_YEAR} · uso interno</p>
+        <p className="mt-1 text-[10px] text-muted-dim">© {PRODUCT_YEAR} · internal use</p>
       </footer>
     </aside>
   );

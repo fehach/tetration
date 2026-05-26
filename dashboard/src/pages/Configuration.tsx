@@ -44,44 +44,44 @@ export function ConfigurationPage() {
   }
   if (!data) {
     return (
-      <Card title="Cargando…">
-        <p className="text-sm text-muted">Recuperando configuración del agente.</p>
+      <Card title="Loading…">
+        <p className="text-sm text-muted">Fetching agent configuration.</p>
       </Card>
     );
   }
 
   return (
     <div className="space-y-5">
-      <Card title="Modo de operación">
+      <Card title="Operation mode">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-white">Modo seguro</p>
+            <p className="text-sm font-medium text-white">Safe mode</p>
             <p className="mt-1 text-xs text-muted">
-              Cuando está activado, las consultas o el código generado por Claude que intenten
-              borrar, modificar o crear datos en CSW son bloqueadas por el sandbox. Mantenlo
-              activado salvo que un administrador necesite operaciones destructivas.
+              When enabled, queries or Claude-generated code that attempt to delete, modify, or
+              create data in CSW are blocked by the sandbox. Keep it enabled unless an
+              administrator needs destructive operations.
             </p>
           </div>
           <Toggle checked={data.safe_mode} onChange={setSafeMode} disabled={saving} />
         </div>
       </Card>
 
-      <Card title="Conexión" subtitle="Solo lectura — se configura por variables de entorno o flags de la CLI.">
+      <Card title="Connection" subtitle="Read-only — configured via environment variables or CLI flags.">
         <dl className="grid grid-cols-1 gap-x-8 gap-y-3 text-sm md:grid-cols-2">
           <Field label="CSW Endpoint" value={data.api_endpoint} mono />
-          <Field label="Credenciales" value={data.credentials_file} mono />
+          <Field label="Credentials" value={data.credentials_file} mono />
           <Field
-            label="Verificación TLS"
-            value={data.verify_tls ? "Activa" : "Desactivada"}
+            label="TLS Verification"
+            value={data.verify_tls ? "Enabled" : "Disabled"}
             tone={data.verify_tls ? "ok" : "warn"}
           />
-          <Field label="Nivel de logs" value={data.log_level} />
+          <Field label="Log level" value={data.log_level} />
         </dl>
       </Card>
 
-      <Card title="Claude AI" subtitle="Modelo y proxy ClaudeGate utilizados para el chat.">
+      <Card title="Claude AI" subtitle="Model and ClaudeGate proxy used for chat.">
         <dl className="grid grid-cols-1 gap-x-8 gap-y-3 text-sm md:grid-cols-2">
-          <Field label="Modelo" value={data.claude_model} mono />
+          <Field label="Model" value={data.claude_model} mono />
           <Field label="ClaudeGate URL" value={data.claudegate_url} mono />
         </dl>
       </Card>
