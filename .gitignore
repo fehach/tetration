@@ -1,0 +1,57 @@
+# Credentials & secrets
+credentials*.json
+*.pem
+*.key
+.env
+.env.*
+
+# Generated reports
+*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+ven1/
+env/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Dashboard frontend
+dashboard/node_modules/
+dashboard/dist/
+csw_agent/dashboard/static/
+
+# Generated package metadata
+csw_agent.egg-info/
+
+# Legacy / scratch files
+red button/
+*.bak
+*.legacy.*
+
+# TypeScript build artifacts
+dashboard/tsconfig.tsbuildinfo
+dashboard/tsconfig.node.tsbuildinfo
+
+# ZIP bundles (may contain sensitive data)
+*.zip
