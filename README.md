@@ -6,6 +6,10 @@ The agent translates natural-language questions into CSW REST calls, runs them, 
 results. It also includes a catalog of pre-built read-only queries (agents, workspaces,
 enforcement reports, vulnerabilities, …) and a CSV chat mode.
 
+📘 **[Technical overview](./docs/AGENT_OVERVIEW.md)** — what the agent does, how it works
+(architecture + workflow diagrams), how the AI layer was built, safety model, and engineering
+practices.
+
 ## Requirements
 
 - Python 3.10+
