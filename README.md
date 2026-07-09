@@ -85,6 +85,36 @@ Read-only POSTs (`/inventory/search`, `/inventory/count`, `/flowsearch`, `/polic
 Enable destructive calls explicitly with `--unsafe`. Even then the agent will ask before
 executing.
 
+## PCI-DSS compliance dashboard
+
+The dashboard includes a **PCI-DSS Compliance** page (`/compliance`) that assesses a CSW scope —
+your Cardholder Data Environment (CDE) — against the subset of PCI-DSS v4.0.1 requirements that
+CSW evidence can actually verify. Scope names containing "PCI" or "CDE" are suggested
+automatically in the selector.
+
+| Requirement | What is checked | CSW evidence |
+|---|---|---|
+| **Req 1** — Network security controls | Enforcement enabled, catch-all = DENY, ≥ 10 policies per workspace | `/applications/{id}/policies` (absolute + default), workspace flags |
+| **Req 6 · 11.3** — Vulnerability management | Critical CVEs (CVSS ≥ 7), fix availability, scan coverage | `/workload/{uuid}/vulnerabilities` |
+| **Req 7** — Need-to-know access | Protocol/port specificity, DENY rules, any-protocol ALLOW rules | Policy `l4_params` |
+| **Req 10** — Monitoring & logging | Agent coverage vs. inventory, check-in freshness, flow telemetry | `/inventory/search` (by `scopeName`) joined to `/sensors` |
+| **Req 11.4.4** — Segmentation verification | Policy analysis enabled, analyzed/enforced versions present | Workspace analysis/enforcement versions |
+
+The scoring engine (`csw_agent/queries/pci.py`) is **deterministic** — same inputs, same
+100-point score — so results are reproducible audit evidence. Each run exports a combined
+evidence CSV (workspaces, critical CVEs, workloads without agent) downloadable from the page.
+
+An optional **executive summary** button streams a Claude-generated narrative (posture summary
+plus one prioritized recommendation per requirement) grounded in the assessment JSON. It is
+text-only — no code generation or execution — and the deterministic checks remain the source of
+truth.
+
+> **Disclaimer**: this is a compliance *readiness* view, not an official assessment. Formal
+> PCI-DSS validation requires a Qualified Security Assessor (QSA).
+
+API: `GET /api/compliance/scopes`, `POST /api/compliance/assess`,
+`POST /api/compliance/summary` (SSE).
+
 ## Development
 
 ```bash
