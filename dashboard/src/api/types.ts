@@ -79,6 +79,52 @@ export type ChatEvent =
   | { type: "error"; message: string }
   | { type: "done" };
 
+export interface ComplianceScope {
+  name: string;
+  suggested: boolean;
+}
+
+export type PciStatus = "pass" | "warn" | "fail";
+
+export interface PciCheck {
+  title: string;
+  status: PciStatus;
+  detail: string;
+}
+
+export interface PciRequirement {
+  id: string;
+  title: string;
+  status: PciStatus;
+  points: number;
+  max_points: number;
+  checks: PciCheck[];
+}
+
+export interface PciAssessment {
+  scope_name: string;
+  generated_at: string;
+  score: number;
+  max_score: number;
+  level: { label: string; tone: PciStatus };
+  kpis: {
+    workloads_total: number;
+    workloads_with_agent: number;
+    coverage_pct: number;
+    critical_cves: number;
+    cve_hosts: number;
+    workspaces_total: number;
+    workspaces_enforced: number;
+  };
+  requirements: PciRequirement[];
+  tables: {
+    workspaces: Record<string, unknown>[];
+    critical_cves: Record<string, unknown>[];
+    no_agent: Record<string, unknown>[];
+  };
+  evidence_file: string | null;
+}
+
 export interface ChatHistoryEntry {
   role: "user" | "assistant";
   content: string;

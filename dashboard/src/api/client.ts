@@ -2,7 +2,9 @@ import type {
   AppConfig,
   ChatEvent,
   ChatHistoryEntry,
+  ComplianceScope,
   Health,
+  PciAssessment,
   PromptHistoryEntry,
   QueryResult,
   WebQuery,
@@ -37,6 +39,12 @@ export const api = {
       body: JSON.stringify({ inputs }),
     }),
   fileUrl: (filename: string) => `${BASE}/files/${encodeURIComponent(filename)}`,
+  complianceScopes: () => request<ComplianceScope[]>("/compliance/scopes"),
+  complianceAssess: (scope_name: string) =>
+    request<PciAssessment>("/compliance/assess", {
+      method: "POST",
+      body: JSON.stringify({ scope_name }),
+    }),
   chatHistory: () => request<ChatHistoryEntry[]>("/chat/history"),
   chatReset: () => request<{ ok: boolean }>("/chat/reset", { method: "POST" }),
   promptHistory: (limit = 50) =>

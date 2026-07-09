@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import { ChatPage } from "./pages/Chat";
+import { CompliancePage } from "./pages/Compliance";
 import { ConfigurationPage } from "./pages/Configuration";
 import { HomePage } from "./pages/Home";
 import { QueriesPage } from "./pages/Queries";
@@ -18,6 +19,7 @@ export default function App() {
               <Route index element={<HomePage />} />
               <Route path="/queries" element={<QueriesPage />} />
               <Route path="/chat" element={<ChatPage />} />
+              <Route path="/compliance" element={<CompliancePage />} />
               <Route path="/configuration" element={<ConfigurationPage />} />
             </Routes>
           </div>

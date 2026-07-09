@@ -1,10 +1,11 @@
-import { Home, MessageSquare, Settings, Sparkles, Wrench } from "lucide-react";
+import { Home, MessageSquare, Settings, ShieldCheck, Sparkles, Wrench } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: Home },
   { to: "/queries", label: "Queries", icon: Wrench },
   { to: "/chat", label: "Chat with Claude", icon: MessageSquare },
+  { to: "/compliance", label: "PCI-DSS Compliance", icon: ShieldCheck },
   { to: "/configuration", label: "Configuration", icon: Settings },
 ];
 
