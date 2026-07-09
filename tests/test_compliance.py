@@ -229,3 +229,80 @@ def test_requirement_status_bands():
     assert RequirementScore("R", "t", 12, 25, checks).status == "warn"
     assert RequirementScore("R", "t", 2, 25, checks).status == "fail"
     assert RequirementScore("R", "t", 0, 0, checks).status == "fail"
+
+
+# ── API tests ───────────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def offline_api(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from csw_agent.config import Settings
+    from csw_agent.dashboard.app import create_app
+    from csw_agent.dashboard.state import DashboardState
+
+    creds = tmp_path / "creds.json"
+    creds.write_text("{}")
+    settings = Settings(credentials_file=creds)
+    state = DashboardState(settings=settings, client=None)
+    return TestClient(create_app(settings, state=state))
+
+
+@pytest.fixture
+def live_api(csw_client, fake_rest, tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from csw_agent.config import Settings
+    from csw_agent.dashboard.app import create_app
+    from csw_agent.dashboard.state import DashboardState
+
+    monkeypatch.chdir(tmp_path)  # evidence CSV lands in tmp
+    _register_scope_endpoints(fake_rest, tmp_path)
+    creds = tmp_path / "creds.json"
+    creds.write_text("{}")
+    settings = Settings(credentials_file=creds)
+    state = DashboardState(settings=settings, client=csw_client)
+    return TestClient(create_app(settings, state=state))
+
+
+def test_scopes_offline_returns_503(offline_api):
+    assert offline_api.get("/api/compliance/scopes").status_code == 503
+
+
+def test_assess_offline_returns_503(offline_api):
+    resp = offline_api.post("/api/compliance/assess", json={"scope_name": "X"})
+    assert resp.status_code == 503
+
+
+def test_scopes_lists_and_suggests(live_api):
+    body = live_api.get("/api/compliance/scopes").json()
+    names = [s["name"] for s in body]
+    assert set(names) == {"MyOrg", "MyOrg:PCI-CDE", "MyOrg:OTHER"}
+    # Suggested scopes (name contains pci/cde) sort first.
+    assert body[0]["name"] == "MyOrg:PCI-CDE"
+    assert body[0]["suggested"] is True
+
+
+def test_assess_blank_scope_returns_422(live_api):
+    resp = live_api.post("/api/compliance/assess", json={"scope_name": "   "})
+    assert resp.status_code == 422
+
+
+def test_assess_unknown_scope_returns_404(live_api):
+    resp = live_api.post("/api/compliance/assess", json={"scope_name": "NOPE"})
+    assert resp.status_code == 404
+
+
+def test_assess_returns_full_payload(live_api):
+    resp = live_api.post("/api/compliance/assess", json={"scope_name": "MyOrg:PCI-CDE"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["scope_name"] == "MyOrg:PCI-CDE"
+    assert len(body["requirements"]) == 5
+    assert body["kpis"]["critical_cves"] == 1
+    assert body["evidence_file"] is not None
+    # The evidence CSV is downloadable through the existing files route.
+    download = live_api.get(f"/api/files/{body['evidence_file']}")
+    assert download.status_code == 200
+    assert download.headers["content-type"].startswith("text/csv")

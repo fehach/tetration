@@ -16,6 +16,7 @@ from csw_agent import __version__
 from csw_agent.config import Settings
 from csw_agent.dashboard.chat_api import session as chat_session
 from csw_agent.dashboard.chat_api import stream_chat
+from csw_agent.dashboard.compliance_api import list_scopes, run_assessment
 from csw_agent.dashboard.prompt_history import get_history
 from csw_agent.dashboard.queries_api import build_web_catalog, execute_query
 from csw_agent.dashboard.state import DashboardState, build_state
@@ -37,6 +38,10 @@ class ConfigPatch(BaseModel):
 
 class QueryRunRequest(BaseModel):
     inputs: dict[str, Any] = {}
+
+
+class AssessRequest(BaseModel):
+    scope_name: str
 
 
 def create_app(settings: Settings, state: DashboardState | None = None) -> FastAPI:
@@ -129,6 +134,29 @@ def _register_routes(
     def clear_prompts() -> dict[str, bool]:
         get_history().clear()
         return {"ok": True}
+
+    @app.get("/api/compliance/scopes")
+    def compliance_scopes() -> list[dict[str, Any]]:
+        if state.client is None:
+            raise HTTPException(status_code=503, detail="CSW client not available")
+        try:
+            return list_scopes(state)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    @app.post("/api/compliance/assess")
+    def compliance_assess(body: AssessRequest) -> dict[str, Any]:
+        if ctx is None:
+            raise HTTPException(status_code=503, detail="CSW client not available")
+        scope_name = body.scope_name.strip()
+        if not scope_name:
+            raise HTTPException(status_code=422, detail="scope_name is required")
+        try:
+            return run_assessment(ctx, scope_name)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except RuntimeError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     @app.get("/api/config")
     def get_config() -> dict[str, Any]:

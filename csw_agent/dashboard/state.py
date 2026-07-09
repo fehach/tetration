@@ -24,11 +24,13 @@ class DashboardState:
     overview_cache: TTLCache = field(init=False)
     versions_cache: TTLCache = field(init=False)
     workspaces_cache: TTLCache = field(init=False)
+    scopes_cache: TTLCache = field(init=False)
 
     def __post_init__(self) -> None:
         self.overview_cache = TTLCache(self.settings.workspace_cache_ttl_seconds)
         self.versions_cache = TTLCache(self.settings.workspace_cache_ttl_seconds)
         self.workspaces_cache = TTLCache(self.settings.workspace_cache_ttl_seconds)
+        self.scopes_cache = TTLCache(self.settings.workspace_cache_ttl_seconds)
 
     @property
     def csw_connected(self) -> bool:
