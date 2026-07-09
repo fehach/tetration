@@ -62,15 +62,33 @@ export async function streamChat(
   onEvent: (event: ChatEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const resp = await fetch(`${BASE}/chat`, {
+  return streamSse("/chat", { message }, onEvent, signal);
+}
+
+/** Stream the Claude executive summary for a compliance assessment. */
+export async function streamComplianceSummary(
+  assessment: PciAssessment,
+  onEvent: (event: ChatEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  return streamSse("/compliance/summary", { assessment }, onEvent, signal);
+}
+
+async function streamSse(
+  path: string,
+  body: unknown,
+  onEvent: (event: ChatEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  const resp = await fetch(`${BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify(body),
     signal,
   });
   if (!resp.ok || !resp.body) {
     const text = await resp.text();
-    throw new Error(`Chat failed: ${resp.status} ${text.slice(0, 200)}`);
+    throw new Error(`Stream failed: ${resp.status} ${text.slice(0, 200)}`);
   }
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();

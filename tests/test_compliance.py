@@ -294,6 +294,40 @@ def test_assess_unknown_scope_returns_404(live_api):
     assert resp.status_code == 404
 
 
+def test_summary_empty_assessment_returns_422(offline_api):
+    resp = offline_api.post("/api/compliance/summary", json={"assessment": {}})
+    assert resp.status_code == 422
+
+
+def test_summary_prompt_embeds_assessment():
+    from csw_agent.dashboard.compliance_api import build_summary_prompt
+
+    prompt = build_summary_prompt({"scope_name": "MyOrg:PCI-CDE", "score": 72.0})
+    assert "MyOrg:PCI-CDE" in prompt
+    assert "{assessment}" not in prompt
+    assert "readiness" in prompt.lower()
+
+
+def test_summary_streams_error_when_claude_unreachable(offline_api, monkeypatch):
+    # Force the anthropic import inside stream_summary to fail so the endpoint
+    # degrades to an SSE error frame instead of hanging on a network call.
+    import builtins
+
+    real_import = builtins.__import__
+
+    def failing_import(name, *args, **kwargs):
+        if name == "anthropic":
+            raise ImportError("anthropic not available")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", failing_import)
+    with offline_api.stream("POST", "/api/compliance/summary", json={"assessment": {"score": 1}}) as resp:
+        assert resp.status_code == 200
+        body = b"".join(resp.iter_bytes()).decode()
+    assert '"type": "error"' in body
+    assert '"type": "done"' in body
+
+
 def test_assess_returns_full_payload(live_api):
     resp = live_api.post("/api/compliance/assess", json={"scope_name": "MyOrg:PCI-CDE"})
     assert resp.status_code == 200

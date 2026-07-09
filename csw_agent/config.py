@@ -31,6 +31,7 @@ class Settings:
     max_history_turns: int = 10
     max_tokens_code: int = 8000
     max_tokens_csv: int = 6000
+    max_tokens_summary: int = 1500
     syntax_retry_limit: int = 2
     workspace_cache_ttl_seconds: int = 300
     request_timeout_seconds: int = 60
