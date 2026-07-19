@@ -1,6 +1,6 @@
 # Workload Atlas — AI copilot for Cisco Secure Workload
 
-> *Working title — the Python package keeps its internal name `csw-agent`.*
+> *The Python package keeps its internal name `csw-agent`.*
 
 AI-powered assessment, operations and reporting for **Cisco Secure Workload (CSW/Tetration)**,
 built for security teams and Cisco partners. Ask questions in natural language; get validated,
