@@ -1,10 +1,49 @@
-# csw-agent
+# SegmentIQ — AI copilot for Cisco Secure Workload
 
-Cisco Secure Workload (CSW/Tetration) interactive OpenAPI agent powered by Claude.
+> *Working title — the Python package keeps its internal name `csw-agent`.*
 
-The agent translates natural-language questions into CSW REST calls, runs them, and presents the
-results. It also includes a catalog of pre-built read-only queries (agents, workspaces,
-enforcement reports, vulnerabilities, …) and a CSV chat mode.
+AI-powered assessment, operations and reporting for **Cisco Secure Workload (CSW/Tetration)**,
+built for security teams and Cisco partners. Ask questions in natural language; get validated,
+sandbox-checked API operations, evidence-backed assessments and exportable reports — with a
+services roadmap extending to **Secure Network Analytics (SNA)**.
+
+> **Independent project.** Not affiliated with, endorsed by, or sponsored by Cisco Systems, Inc.
+> Cisco, Cisco Secure Workload, Tetration, Secure Network Analytics and Cisco XDR are trademarks
+> of Cisco Systems, Inc. This tool consumes the products' public OpenAPI interfaces.
+
+![PCI-DSS readiness dashboard](docs/img/pci-readiness-dashboard.png)
+
+## For Cisco partners
+
+**Why now:** Cisco has announced end-of-life for the Secure Workload M5/M6 hardware appliances.
+CSW itself continues — as SaaS, or as software running on customer-prepared virtualized
+infrastructure (VMware/ESXi). Every deployment on that hardware has a migration project in its
+future, with a hard deadline set by the support calendar. This toolkit automates the assessment,
+evidence and validation work inside those projects.
+
+| Service package | Outcome for the end customer | How this toolkit accelerates it |
+|---|---|---|
+| [**Appliance-to-software migration**](docs/partners/migration-assessment.md) (M5/M6 → SaaS or on-prem virtual cluster) | CSW continuity beyond hardware EoL, with proof nothing was lost in the move | Automated deployment baseline, migration readiness report, post-migration assurance diff *(module in roadmap — data collection already built)* |
+| [**PCI-DSS readiness assessment**](docs/partners/pci-readiness.md) | Audit-ready evidence of segmentation posture for the CDE | One-click scope assessment: 100-point deterministic score, evidence CSV, AI executive summary *(built — see `feature/pci-dss-dashboard`)* |
+| [**Segmentation maturity assessment**](docs/partners/segmentation-maturity.md) | Prioritized roadmap from visibility to full enforcement | Reproducible 100-point maturity scoring per workspace/scope, bulk or deep-dive |
+| [**SNA ↔ XDR integration & playbooks**](docs/partners/sna-xdr-integration.md) | Detections that turn into documented, repeatable response | *(Roadmap)* Integration validation checks and AI-assisted playbook documentation |
+
+Details, deliverables and typical durations: [`docs/partners/`](docs/partners/README.md).
+A demo mode with synthetic data (no CSW tenant required) is on the near-term roadmap.
+
+![Evidence tables](docs/img/pci-readiness-evidence.png)
+
+## What the product does
+
+- **Natural-language operations**: questions in plain English or Spanish become Python that
+  calls the CSW OpenAPI — statically validated in an AST sandbox before execution, with
+  destructive calls blocked by default.
+- **Pre-built query catalog**: 16 deterministic read-only queries (agents, workspaces,
+  enforcement gaps, CVE reports) usable from CLI or web dashboard, no LLM required.
+- **Assessments with evidence**: PCI-DSS readiness and segmentation maturity scoring with
+  exportable CSV evidence and AI-generated executive narratives.
+- **Web dashboard**: dark, Cisco-console-compatible UI (React + FastAPI + SSE streaming) with
+  live telemetry: latency percentiles, token usage, success rates.
 
 ## Requirements
 
@@ -36,7 +75,7 @@ All other settings can be set via env vars or CLI flags:
 
 | Setting | Env var | CLI flag | Default |
 |---|---|---|---|
-| API endpoint | `CSW_ENDPOINT` | `--endpoint` | `https://cx-taas.tetrationcloud.com/` |
+| API endpoint | `CSW_ENDPOINT` | `--endpoint` | `https://your.tetrationcloud.com/` |
 | Credentials path | `CSW_CREDENTIALS` | `--credentials` | `~/.csw/credentials.json` |
 | TLS verification | `CSW_VERIFY_TLS` | `--insecure` to disable | `true` |
 | Safe mode (confirm destructive calls) | `CSW_SAFE_MODE` | `--unsafe` to disable | `true` |
@@ -85,6 +124,15 @@ Read-only POSTs (`/inventory/search`, `/inventory/count`, `/flowsearch`, `/polic
 Enable destructive calls explicitly with `--unsafe`. Even then the agent will ask before
 executing.
 
+## For engineers & recruiters
+
+The full technical story — architecture and workflow diagrams, how the AI layer was built via
+context engineering (no fine-tuning), the sandbox safety model, observability and engineering
+practices — lives in [`docs/AGENT_OVERVIEW.md`](docs/AGENT_OVERVIEW.md).
+
+Feature branches pending merge: `feature/pci-dss-dashboard` (PCI-DSS compliance page),
+`claude/agent-review-documentation-pi4h3n` (original technical overview doc).
+
 ## Development
 
 ```bash
@@ -120,9 +168,17 @@ csw_agent/
 dashboard/                # Vite + React + TS + Tailwind frontend
 ├── src/{components,pages,hooks,api}
 └── tailwind.config.ts    # Cisco palette (CLAUDE.md)
+
+docs/
+├── AGENT_OVERVIEW.md     # technical deep-dive (engineers/recruiters)
+├── partners/             # service one-pagers (Cisco partners)
+└── img/                  # product screenshots
 ```
 
-## Authors
+## Authors & services
 
 - **Federico Hach**
 - **Diego Aguilar**
+
+For partner services engagements (CSW migrations, assessments, SNA/XDR integration), contact
+the authors.
