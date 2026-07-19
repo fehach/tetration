@@ -1,7 +1,7 @@
 # Partner services catalog
 
 Service packages for Cisco partners delivering **Secure Workload (CSW)** and
-**Secure Network Analytics (SNA)** projects, accelerated by the SegmentIQ toolkit.
+**Secure Network Analytics (SNA)** projects, accelerated by the Workload Atlas toolkit.
 
 | # | Service | Product | Status of tooling |
 |---|---|---|---|

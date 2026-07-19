@@ -1,4 +1,4 @@
-# SegmentIQ — AI copilot for Cisco Secure Workload
+# Workload Atlas — AI copilot for Cisco Secure Workload
 
 > *Working title — the Python package keeps its internal name `csw-agent`.*
 

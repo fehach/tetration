@@ -36,7 +36,7 @@ between "detection fired" and "documented response executed" is a services engag
 
 ## Toolkit roadmap
 
-The SegmentIQ platform pattern (natural-language agent + deterministic checks + evidence
+The Workload Atlas platform pattern (natural-language agent + deterministic checks + evidence
 dashboard) extends to SNA via its REST API: planned modules include integration
 validation checks (are events reaching XDR? which host groups are covered?), detection
 hygiene queries, and AI-assisted playbook documentation generated from the customer's
