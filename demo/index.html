@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Workload Atlas — interactive PCI-DSS compliance demo for Cisco Secure Workload. Sample data only.">
+<title>Workload Atlas — PCI-DSS Compliance Demo</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --blue: #049FD9;
+    --green: #6EBE4A;
+    --yellow: #FFCC00;
+    --red: #CF2030;
+    --bg: #1A1A2E;
+    --bg-2: #0D274D;
+    --surface: #1E2A3A;
+    --card: #243447;
+    --sidebar: #0D1B2A;
+    --border: #2D3E50;
+    --hover: #1A3A5C;
+    --selected: #0A4D7A;
+    --text: #FFFFFF;
+    --text-2: #A0AEC0;
+    --text-3: #6B7B8D;
+    --radius: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --font: 'CiscoSans', 'Inter', 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    background: var(--bg);
+    color: var(--text);
+  }
+  h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+  button, select { font-family: inherit; font-size: 13px; }
+  button:focus-visible, select:focus-visible, a:focus-visible {
+    outline: 2px solid var(--blue); outline-offset: 2px;
+  }
+
+  /* ── Shell ─────────────────────────────────────────────── */
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 240px; flex-shrink: 0; background: var(--sidebar);
+    display: flex; flex-direction: column; padding: 16px 12px; gap: 4px;
+    border-right: 1px solid var(--border);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px 20px;
+    font-weight: 600; font-size: 15px; letter-spacing: -0.01em;
+  }
+  .brand .logo {
+    width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--blue), #0D6E96);
+    display: grid; place-items: center; font-size: 12px; font-weight: 700;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 9px 10px;
+    border-radius: 6px; color: var(--text-2); text-decoration: none;
+    font-size: 13.5px; border-left: 3px solid transparent; cursor: pointer;
+  }
+  .nav-item:hover { background: var(--hover); color: var(--text); }
+  .nav-item.active {
+    background: var(--selected); color: var(--text);
+    border-left-color: var(--blue);
+  }
+  .nav-item svg { flex-shrink: 0; }
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .header {
+    height: 56px; flex-shrink: 0; background: var(--sidebar);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; gap: 16px;
+  }
+  .crumbs { font-size: 13px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .crumbs b { color: var(--text); font-weight: 600; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .conn { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot.ok { background: var(--green); } .dot.warn { background: var(--yellow); }
+  .dot.fail { background: var(--red); } .dot.info { background: var(--blue); }
+  .tag {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+  }
+  .tag.mock { background: rgba(255,204,0,0.14); border: 1px solid rgba(255,204,0,0.4); color: var(--text); }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--selected);
+    display: grid; place-items: center; font-size: 12px; font-weight: 600; flex-shrink: 0;
+  }
+
+  .content { padding: 24px; max-width: 1440px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── Cards & common ────────────────────────────────────── */
+  .card {
+    background: var(--card); border-radius: var(--radius); padding: 20px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .card h3 { font-size: 14px; margin-bottom: 4px; }
+  .card .sub { font-size: 12px; color: var(--text-3); margin: 0 0 14px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-3);
+  }
+
+  /* ── Toolbar ───────────────────────────────────────────── */
+  .toolbar { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+  .toolbar .field { display: flex; flex-direction: column; gap: 6px; }
+  .toolbar select {
+    background: var(--surface); color: var(--text); border: 1px solid var(--border);
+    border-radius: 4px; padding: 8px 34px 8px 12px; min-width: 260px;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23A0AEC0' stroke-width='2'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+  }
+  .hint { font-size: 11px; color: var(--text-3); }
+  .btn {
+    border-radius: 4px; padding: 9px 16px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .btn.primary { background: var(--blue); color: #fff; }
+  .btn.primary:hover { filter: brightness(0.9); }
+  .btn.secondary { background: transparent; border-color: var(--blue); color: var(--blue); }
+  .btn.secondary:hover { background: rgba(4,159,217,0.1); }
+  .btn.ghost { background: transparent; border-color: var(--border); color: var(--text-3); }
+  .btn.ghost:hover { background: var(--hover); color: var(--text-2); }
+  .btn:disabled { opacity: 0.55; cursor: wait; }
+  .mini-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.05em; padding: 1px 6px;
+    border-radius: 3px; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-3); text-transform: uppercase;
+  }
+  .spinner {
+    width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+    animation: spin 0.7s linear infinite; display: none;
+  }
+  .running .spinner { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Disclaimer ────────────────────────────────────────── */
+  .alert {
+    background: var(--surface); border-left: 4px solid var(--blue);
+    border-radius: 4px; padding: 12px 16px; display: flex; gap: 10px;
+    font-size: 13px; color: var(--text-2); align-items: flex-start;
+  }
+  .alert svg { flex-shrink: 0; margin-top: 2px; }
+
+  /* ── Score row ─────────────────────────────────────────── */
+  .score-row { display: grid; grid-template-columns: 320px 1fr; gap: 16px; }
+  .gauge-card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .gauge-wrap { position: relative; width: 150px; height: 150px; }
+  .gauge-wrap svg { transform: rotate(-90deg); }
+  .gauge-track { fill: none; stroke: var(--border); stroke-width: 11; }
+  .gauge-val { fill: none; stroke-width: 11; stroke-linecap: round; transition: stroke-dashoffset 0.8s ease, stroke 0.3s; }
+  .gauge-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 0;
+  }
+  .metric { font-size: 32px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .gauge-center .of { font-size: 11px; color: var(--text-3); }
+  .level-chip {
+    display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px;
+    border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid;
+  }
+  .level-chip.pass { background: rgba(110,190,74,0.12); border-color: rgba(110,190,74,0.45); }
+  .level-chip.warn { background: rgba(255,204,0,0.10); border-color: rgba(255,204,0,0.4); }
+  .level-chip.fail { background: rgba(207,32,48,0.14); border-color: rgba(207,32,48,0.5); }
+
+  .kpis { display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; gap: 16px; }
+  @media (max-width: 560px) { .kpis { grid-template-columns: 1fr; } }
+  .kpi { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+  .kpi .metric { font-size: 28px; }
+  .kpi .kpi-sub { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+
+  /* ── Requirement cards ─────────────────────────────────── */
+  .req-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+  .req-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 2px; }
+  .req-title { font-size: 13.5px; font-weight: 600; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px;
+    border-radius: 999px; font-size: 11px; font-weight: 600; flex-shrink: 0;
+    border: 1px solid; text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .badge.pass { background: rgba(110,190,74,0.12); border-color: rgba(110,190,74,0.45); }
+  .badge.warn { background: rgba(255,204,0,0.10); border-color: rgba(255,204,0,0.4); }
+  .badge.fail { background: rgba(207,32,48,0.14); border-color: rgba(207,32,48,0.5); }
+  .pts { font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; margin-bottom: 8px; }
+  .bar { height: 6px; border-radius: 3px; background: var(--surface); overflow: hidden; margin-bottom: 14px; }
+  .bar > i { display: block; height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .bar.pass > i { background: var(--green); } .bar.warn > i { background: var(--yellow); } .bar.fail > i { background: var(--red); }
+  .checks { display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; }
+  .check { display: flex; align-items: baseline; gap: 8px; color: var(--text-2); }
+  .check .dot { position: relative; top: -1px; }
+  .check b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ── Tables ────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; margin: 0 -20px -20px; padding: 0 20px 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  thead th {
+    background: var(--bg-2); text-align: left; padding: 8px 10px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-2); font-weight: 600; white-space: nowrap;
+  }
+  tbody td { padding: 8px 10px; border-top: 1px solid var(--border); white-space: nowrap; }
+  td .badge { font-size: 10.5px; padding: 2px 7px; }
+  tbody tr:nth-child(odd) { background: var(--surface); }
+  tbody tr:nth-child(even) { background: var(--card); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td .mono { font-family: var(--mono); font-size: 12px; }
+  .empty-row td { color: var(--text-3); text-align: center; padding: 20px; }
+  .tables-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .tables-row > .card { min-width: 0; }
+  .tables-row > .card.span2 { grid-column: 1 / -1; }
+
+  /* ── Executive summary (AI) ──────────────────────────────── */
+  .ai-card { border-left: 4px solid var(--blue); }
+  .ai-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ai-head h3 { margin: 0; }
+  .ai-chip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;
+    padding: 3px 9px; border-radius: 999px; color: var(--text-2);
+    background: rgba(4,159,217,0.12); border: 1px solid rgba(4,159,217,0.4);
+  }
+  .ai-text { font-size: 13.5px; color: var(--text-2); max-width: 78ch; margin: 10px 0 14px; }
+  .ai-text b { color: var(--text); }
+  .ai-text .caret {
+    display: inline-block; width: 7px; height: 14px; background: var(--blue);
+    vertical-align: -2px; margin-left: 2px; animation: blink 0.9s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .ai-recs { display: flex; flex-direction: column; gap: 8px; }
+  .rec {
+    display: flex; gap: 12px; padding: 10px 14px; background: var(--surface);
+    border-radius: 6px; font-size: 12.5px; color: var(--text-2); align-items: baseline;
+    opacity: 0; transform: translateY(4px); transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .rec.in { opacity: 1; transform: none; }
+  .rec .req-tag {
+    display: flex; align-items: center; gap: 7px; flex-shrink: 0; min-width: 96px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--text);
+  }
+  .rec .req-tag .dot { position: relative; top: -1px; }
+  .rec b { color: var(--text); }
+  .ai-foot {
+    display: flex; align-items: flex-start; gap: 8px; margin-top: 14px;
+    font-size: 11px; color: var(--text-3);
+  }
+  .ai-foot svg { flex-shrink: 0; margin-top: 1px; }
+  @media (prefers-reduced-motion: reduce) { .rec { transition: none; } .ai-text .caret { animation: none; } }
+
+  .footnote {
+    font-size: 12px; color: var(--text-3); display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .footnote code { font-family: var(--mono); font-size: 11.5px; color: var(--text-2); background: var(--surface); padding: 2px 6px; border-radius: 4px; }
+
+  /* ── Toast ─────────────────────────────────────────────── */
+  .toast {
+    position: fixed; right: 20px; bottom: 20px; z-index: 50;
+    background: var(--surface); border-left: 4px solid var(--blue);
+    border-radius: 4px; padding: 12px 16px; box-shadow: var(--shadow);
+    font-size: 13px; max-width: 340px; display: none; align-items: flex-start; gap: 10px;
+  }
+  .toast.show { display: flex; }
+
+  /* ── Responsive ────────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .sidebar { width: 64px; padding: 16px 8px; }
+    .sidebar .label, .brand .word { display: none; }
+    .nav-item { justify-content: center; padding: 10px 0; }
+    .tables-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .score-row { grid-template-columns: 1fr; }
+    .header .crumbs { font-size: 12px; }
+    .conn .label { display: none; }
+    .toolbar .field, .toolbar select { width: 100%; min-width: 0; }
+    .toolbar .btn { white-space: normal; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gauge-val, .bar > i { transition: none; }
+    .spinner { animation-duration: 1.5s; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- ── Sidebar ── -->
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="brand"><span class="logo">WA</span><span class="word">Workload Atlas</span></div>
+    <a class="nav-item" href="#" onclick="return false;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="label">Home</span>
+    </a>
+    <a class="nav-item" href="#" onclick="return false;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+      <span class="label">Queries</span>
+    </a>
+    <a class="nav-item" href="#" onclick="return false;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="label">Chat with Claude</span>
+    </a>
+    <a class="nav-item active" href="#" onclick="return false;" aria-current="page">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+      <span class="label">PCI-DSS Compliance</span>
+    </a>
+    <a class="nav-item" href="#" onclick="return false;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><circle cx="4" cy="12" r="2"/><circle cx="12" cy="10" r="2"/><circle cx="20" cy="14" r="2"/></svg>
+      <span class="label">Configuration</span>
+    </a>
+  </nav>
+
+  <div class="main">
+    <!-- ── Header ── -->
+    <header class="header">
+      <div class="crumbs">Dashboard / <b>PCI-DSS Compliance</b></div>
+      <div class="header-right">
+        <span class="tag mock">MVP · mock data</span>
+        <span class="conn"><span class="dot ok"></span><span class="label">CSW connected</span></span>
+        <span class="conn"><span class="dot info"></span><span class="label">Safe mode ON</span></span>
+        <span class="avatar">FH</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ── Toolbar ── -->
+      <section class="card">
+        <div class="toolbar">
+          <div class="field">
+            <span class="eyebrow">CDE scope (Cardholder Data Environment)</span>
+            <select id="scope" aria-label="CDE scope">
+              <option value="cde" selected>MyOrg:PROD:PCI-CDE — suggested</option>
+              <option value="pay">MyOrg:PROD:PAYMENTS</option>
+              <option value="core">MyOrg:CLOUD:CORE</option>
+            </select>
+            <span class="hint">Auto-suggested: scope name contains “PCI”. You can pick any scope.</span>
+          </div>
+          <button class="btn primary" id="run">
+            <span class="spinner" aria-hidden="true"></span>
+            <span id="run-label">Run assessment</span>
+          </button>
+          <button class="btn secondary" id="export">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export evidence CSV
+          </button>
+          <button class="btn ghost" id="ai-summary">
+            Generate executive summary <span class="mini-tag">Phase 2</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ── Disclaimer ── -->
+      <div class="alert" role="note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#049FD9" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.01"/><line x1="12" y1="11" x2="12" y2="16"/></svg>
+        <div><b style="color:var(--text)">Compliance readiness view — not an official assessment.</b>
+        Checks map live Cisco Secure Workload evidence to a verifiable subset of PCI-DSS v4.0.1
+        (Req 1, 6, 7, 10, 11). Formal validation requires a Qualified Security Assessor (QSA).</div>
+      </div>
+
+      <!-- ── Score row ── -->
+      <section class="score-row">
+        <div class="card gauge-card">
+          <span class="eyebrow" style="align-self:flex-start">Overall readiness score</span>
+          <div class="gauge-wrap">
+            <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+              <circle class="gauge-track" cx="75" cy="75" r="62"></circle>
+              <circle class="gauge-val" id="gauge" cx="75" cy="75" r="62"></circle>
+            </svg>
+            <div class="gauge-center">
+              <span class="metric" id="score">0</span>
+              <span class="of">/ 100 pts</span>
+            </div>
+          </div>
+          <span class="level-chip" id="level"><span class="dot"></span><span id="level-label"></span></span>
+          <span class="hint" id="scope-echo" style="text-align:center"></span>
+        </div>
+        <div class="kpis" id="kpis"><!-- KPI cards injected --></div>
+      </section>
+
+      <!-- ── Executive summary (AI) ── -->
+      <section class="card ai-card" id="ai-panel" hidden>
+        <div class="ai-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#049FD9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.8L20 10.5l-6.1 1.7L12 18l-1.9-5.8L4 10.5l6.1-1.7z"/><path d="M19 15l0.8 2.4L22 18l-2.2 0.6L19 21l-0.8-2.4L16 18l2.2-0.6z"/></svg>
+          <h3>Executive summary</h3>
+          <span class="ai-chip">Generated by Claude · github-copilot/claude-sonnet-4.6</span>
+          <span class="hint" id="ai-time"></span>
+        </div>
+        <p class="ai-text" id="ai-text"></p>
+        <div class="ai-recs" id="ai-recs" aria-live="polite"></div>
+        <div class="ai-foot">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.01"/><line x1="12" y1="11" x2="12" y2="16"/></svg>
+          <span>AI-generated from the deterministic assessment above — review before acting.
+          The scored checks remain the source of truth for audit evidence.</span>
+        </div>
+      </section>
+
+      <!-- ── Requirements ── -->
+      <section>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <h2 style="font-size:16px">Requirements — evidence-backed checks</h2>
+          <span class="hint">Weights follow the deterministic scoring model · pass / warn / fail per check</span>
+        </div>
+        <div class="req-grid" id="reqs"><!-- requirement cards injected --></div>
+      </section>
+
+      <!-- ── Evidence tables ── -->
+      <section class="tables-row">
+        <div class="card">
+          <h3>CDE workspaces — segmentation posture <span class="eyebrow" style="margin-left:6px">Req 1 · 11.4.4</span></h3>
+          <p class="sub">Enforcement, catch-all action and policy counts per workspace in the selected scope.</p>
+          <div class="table-wrap">
+            <table id="ws-table">
+              <thead><tr>
+                <th>Workspace</th><th>Enforce</th><th>Catch-all</th>
+                <th class="num">Policies</th><th>Ver</th><th>Status</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Critical CVEs on CDE workloads <span class="eyebrow" style="margin-left:6px">Req 6 · 11.3</span></h3>
+          <p class="sub">CVSS ≥ 7.0 detected by CSW agents on hosts inside the selected scope.</p>
+          <div class="table-wrap">
+            <table id="cve-table">
+              <thead><tr>
+                <th>Host</th><th>CVE</th><th>Severity</th><th class="num">CVSS</th><th>Package</th><th>Fixed in</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card span2">
+          <h3>Workloads without agent <span class="eyebrow" style="margin-left:6px">Req 10</span></h3>
+          <p class="sub">Inventory items in the selected scope with no matching CSW agent — blind spots for monitoring and enforcement.</p>
+          <div class="table-wrap">
+            <table id="noagent-table">
+              <thead><tr>
+                <th>Host</th><th>IP address</th><th>OS</th><th>VRF</th><th>First seen</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="hint" id="noagent-note" style="margin:10px 0 0"></p>
+        </div>
+      </section>
+
+      <!-- ── Footer meta ── -->
+      <div class="footnote" id="meta"></div>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status">
+  <span class="dot info" style="margin-top:5px"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+  // ── Mock datasets: one per scope, showing the three visual states ──────────
+  const DATASETS = {
+    cde: {
+      scopeName: "MyOrg:PROD:PCI-CDE",
+      score: 72,
+      level: { label: "Partial — action required", tone: "warn" },
+      kpis: [
+        { label: "CDE workloads", value: "128", sub: "inventory items in scope", tone: "info" },
+        { label: "Agent coverage", value: "93.0%", sub: "119 of 128 workloads · target ≥ 95%", tone: "warn" },
+        { label: "Critical CVEs", value: "7", sub: "CVSS ≥ 7.0 · on 5 CDE hosts", tone: "fail" },
+        { label: "Enforced workspaces", value: "4/6", sub: "enforcement enabled", tone: "warn" },
+      ],
+      reqs: [
+        { id: "Req 1", title: "Network security controls", status: "warn", pts: 18, max: 25,
+          checks: [
+            { s: "warn", t: "Enforcement enabled", d: "4/6 workspaces" },
+            { s: "warn", t: "Catch-all action = DENY", d: "3/6 workspaces" },
+            { s: "pass", t: "≥ 10 policies defined", d: "5/6 workspaces" },
+          ]},
+        { id: "Req 6 · 11.3", title: "Vulnerability management", status: "fail", pts: 8, max: 20,
+          checks: [
+            { s: "fail", t: "No critical CVEs (CVSS ≥ 7)", d: "7 found on 5 hosts" },
+            { s: "warn", t: "Fix version available & pending", d: "12/18 CVEs" },
+            { s: "pass", t: "Scan freshness ≤ 30 days", d: "last scan 6 days ago" },
+          ]},
+        { id: "Req 7", title: "Need-to-know access", status: "pass", pts: 18, max: 20,
+          checks: [
+            { s: "pass", t: "Protocol/port specificity", d: "82% of policies explicit" },
+            { s: "pass", t: "DENY rules present", d: "14 DENY policies" },
+            { s: "warn", t: "No ANY-ANY allow rules", d: "2 found in Reporting" },
+          ]},
+        { id: "Req 10", title: "Monitoring & logging", status: "warn", pts: 14, max: 20,
+          checks: [
+            { s: "warn", t: "Agent coverage", d: "93.0% vs 95% target" },
+            { s: "pass", t: "Agent check-in < 24 h", d: "96% of agents" },
+            { s: "pass", t: "Flow telemetry enabled", d: "all active agents" },
+          ]},
+        { id: "Req 11.4.4", title: "Segmentation verification", status: "pass", pts: 14, max: 15,
+          checks: [
+            { s: "pass", t: "Policy analysis enabled", d: "6/6 workspaces" },
+            { s: "pass", t: "Analyzed version present", d: "6/6 workspaces" },
+            { s: "warn", t: "Enforced version current", d: "4/6 workspaces" },
+          ]},
+      ],
+      workspaces: [
+        { n: "PCI-CDE-Payments-API", e: "Yes", c: "DENY", p: 24, a: "v12", s: "pass", sl: "OK" },
+        { n: "PCI-CDE-Cardholder-DB", e: "Yes", c: "DENY", p: 31, a: "v9", s: "pass", sl: "OK" },
+        { n: "PCI-CDE-Tokenization", e: "Yes", c: "DENY", p: 18, a: "v7", s: "pass", sl: "OK" },
+        { n: "PCI-CDE-Batch-Settlement", e: "Yes", c: "ALLOW", p: 12, a: "v4", s: "warn", sl: "Warn" },
+        { n: "PCI-CDE-Legacy-POS-GW", e: "No", c: "ALLOW", p: 7, a: "v2", s: "fail", sl: "Fail" },
+        { n: "PCI-CDE-Reporting", e: "No", c: "ALLOW", p: 3, a: "—", s: "fail", sl: "Fail" },
+      ],
+      cves: [
+        { h: "pos-gw-01", cve: "CVE-2025-32433", sev: "fail", sl: "Critical", cvss: "10.0", pkg: "erlang-otp", fix: "27.3.3" },
+        { h: "pos-gw-02", cve: "CVE-2021-44228", sev: "fail", sl: "Critical", cvss: "10.0", pkg: "log4j-core", fix: "2.17.1" },
+        { h: "db-card-02", cve: "CVE-2025-1094", sev: "warn", sl: "High", cvss: "8.1", pkg: "postgresql", fix: "17.3" },
+        { h: "batch-01", cve: "CVE-2024-6387", sev: "warn", sl: "High", cvss: "8.1", pkg: "openssh", fix: "9.8p1" },
+        { h: "rpt-03", cve: "CVE-2023-44487", sev: "warn", sl: "High", cvss: "7.5", pkg: "nginx", fix: "1.25.3" },
+        { h: "pos-gw-01", cve: "CVE-2024-3094", sev: "fail", sl: "Critical", cvss: "10.0", pkg: "xz-utils", fix: "5.6.2" },
+      ],
+      noAgent: 9,
+      noAgentRows: [
+        { h: "pos-term-11", ip: "10.20.4.31", os: "Windows Server 2016", v: "PROD", f: "2025-11-03" },
+        { h: "pos-term-12", ip: "10.20.4.32", os: "Windows Server 2016", v: "PROD", f: "2025-11-03" },
+        { h: "kiosk-frontdesk-2", ip: "10.20.7.15", os: "Windows 10 IoT", v: "PROD", f: "2026-01-19" },
+        { h: "db-card-legacy", ip: "10.20.2.9", os: "RHEL 6.10", v: "PROD", f: "2024-08-27" },
+        { h: "rpt-etl-01", ip: "10.20.9.4", os: "Ubuntu 18.04", v: "PROD", f: "2025-06-14" },
+        { h: "appliance-hsm-1", ip: "10.20.1.5", os: "Proprietary appliance", v: "PROD", f: "2024-02-02" },
+      ],
+      noAgentNote: "Showing 6 of 9 — full list included in the evidence CSV.",
+      summary: {
+        text: "The PCI-CDE scope shows a partial compliance posture (72/100). Segmentation fundamentals are in place — three of six workspaces are fully enforced with DENY catch-alls — but two workspaces (Legacy-POS-GW, Reporting) run without enforcement, leaving open lateral paths to cardholder data. The most audit-critical gap is vulnerability management: seven critical CVEs concentrate on the POS gateways, and every one of them already has a fix available.",
+        recs: [
+          { req: "Req 1", tone: "warn", text: "Enable enforcement on <b>PCI-CDE-Legacy-POS-GW</b> and <b>PCI-CDE-Reporting</b>; flip the <b>Batch-Settlement</b> catch-all to DENY after a 7-day flow-analysis window." },
+          { req: "Req 6 · 11.3", tone: "fail", text: "Patch <b>erlang-otp</b> and <b>xz-utils</b> on pos-gw-01/02 first (CVSS 10.0, fixes available), then upgrade <b>log4j-core to 2.17.1</b>. Track remediation dates in the evidence CSV." },
+          { req: "Req 7", tone: "pass", text: "Replace the <b>2 ANY-ANY allow rules</b> in Reporting with port-specific policies derived from observed flows." },
+          { req: "Req 10", tone: "warn", text: "Deploy agents to the <b>9 uncovered workloads</b> listed below to pass the 95% coverage target; confirm whether <b>db-card-legacy</b> (RHEL 6) should be decommissioned instead of onboarded." },
+          { req: "Req 11.4.4", tone: "pass", text: "Re-run policy analysis on the two lagging workspaces so enforced versions are current before the annual segmentation test." },
+        ],
+      },
+      evidence: "pci_evidence_20260709_1432.csv",
+    },
+
+    pay: {
+      scopeName: "MyOrg:PROD:PAYMENTS",
+      score: 91,
+      level: { label: "Compliant posture", tone: "pass" },
+      kpis: [
+        { label: "CDE workloads", value: "46", sub: "inventory items in scope", tone: "info" },
+        { label: "Agent coverage", value: "100%", sub: "46 of 46 workloads", tone: "pass" },
+        { label: "Critical CVEs", value: "0", sub: "CVSS ≥ 7.0 · no findings", tone: "pass" },
+        { label: "Enforced workspaces", value: "3/3", sub: "enforcement enabled", tone: "pass" },
+      ],
+      reqs: [
+        { id: "Req 1", title: "Network security controls", status: "pass", pts: 23, max: 25,
+          checks: [
+            { s: "pass", t: "Enforcement enabled", d: "3/3 workspaces" },
+            { s: "pass", t: "Catch-all action = DENY", d: "3/3 workspaces" },
+            { s: "warn", t: "≥ 10 policies defined", d: "policy review pending in PAY-Ledger" },
+          ]},
+        { id: "Req 6 · 11.3", title: "Vulnerability management", status: "pass", pts: 17, max: 20,
+          checks: [
+            { s: "pass", t: "No critical CVEs (CVSS ≥ 7)", d: "0 found" },
+            { s: "warn", t: "Medium CVEs tracked", d: "11 open, 9 with fix" },
+            { s: "pass", t: "Scan freshness ≤ 30 days", d: "last scan 2 days ago" },
+          ]},
+        { id: "Req 7", title: "Need-to-know access", status: "pass", pts: 19, max: 20,
+          checks: [
+            { s: "pass", t: "Protocol/port specificity", d: "94% of policies explicit" },
+            { s: "pass", t: "DENY rules present", d: "22 DENY policies" },
+            { s: "pass", t: "No ANY-ANY allow rules", d: "none found" },
+          ]},
+        { id: "Req 10", title: "Monitoring & logging", status: "pass", pts: 18, max: 20,
+          checks: [
+            { s: "pass", t: "Agent coverage", d: "100% vs 95% target" },
+            { s: "pass", t: "Agent check-in < 24 h", d: "100% of agents" },
+            { s: "warn", t: "Flow telemetry enabled", d: "1 agent with data plane disabled" },
+          ]},
+        { id: "Req 11.4.4", title: "Segmentation verification", status: "pass", pts: 14, max: 15,
+          checks: [
+            { s: "pass", t: "Policy analysis enabled", d: "3/3 workspaces" },
+            { s: "pass", t: "Analyzed version present", d: "3/3 workspaces" },
+            { s: "pass", t: "Enforced version current", d: "3/3 workspaces" },
+          ]},
+      ],
+      workspaces: [
+        { n: "PAY-Gateway", e: "Yes", c: "DENY", p: 28, a: "v15", s: "pass", sl: "OK" },
+        { n: "PAY-Fraud-Scoring", e: "Yes", c: "DENY", p: 21, a: "v11", s: "pass", sl: "OK" },
+        { n: "PAY-Ledger", e: "Yes", c: "DENY", p: 33, a: "v18", s: "pass", sl: "OK" },
+      ],
+      cves: [],
+      noAgent: 0,
+      noAgentRows: [],
+      noAgentNote: "",
+      summary: {
+        text: "The PAYMENTS scope presents a strong, audit-ready posture (91/100): all three workspaces enforce policy with DENY catch-alls, agent coverage is complete, and no critical CVEs are open. The remaining items are hygiene, not remediation — closing them protects the score ahead of the annual assessment.",
+        recs: [
+          { req: "Req 1", tone: "pass", text: "Complete the pending policy review in <b>PAY-Ledger</b> to keep the ≥10-policy baseline documented." },
+          { req: "Req 6 · 11.3", tone: "pass", text: "Apply the available fixes to <b>9 of 11 medium CVEs</b> during the next patch window; none block compliance today." },
+          { req: "Req 7", tone: "pass", text: "No action needed — use this scope's <b>94% protocol specificity</b> as the reference baseline for other scopes." },
+          { req: "Req 10", tone: "pass", text: "Re-enable the data plane on the <b>1 agent</b> currently not exporting flow telemetry." },
+          { req: "Req 11.4.4", tone: "pass", text: "Archive the current analyzed/enforced versions as evidence for the annual segmentation test (11.4.4)." },
+        ],
+      },
+      evidence: "pci_evidence_20260709_1445.csv",
+    },
+
+    core: {
+      scopeName: "MyOrg:CLOUD:CORE",
+      score: 38,
+      level: { label: "Non-compliant signals", tone: "fail" },
+      kpis: [
+        { label: "CDE workloads", value: "412", sub: "inventory items in scope", tone: "info" },
+        { label: "Agent coverage", value: "71.2%", sub: "293 of 412 · target ≥ 95%", tone: "fail" },
+        { label: "Critical CVEs", value: "23", sub: "CVSS ≥ 7.0 · on 17 hosts", tone: "fail" },
+        { label: "Enforced workspaces", value: "2/11", sub: "enforcement enabled", tone: "fail" },
+      ],
+      reqs: [
+        { id: "Req 1", title: "Network security controls", status: "fail", pts: 8, max: 25,
+          checks: [
+            { s: "fail", t: "Enforcement enabled", d: "2/11 workspaces" },
+            { s: "fail", t: "Catch-all action = DENY", d: "1/11 workspaces" },
+            { s: "warn", t: "≥ 10 policies defined", d: "5/11 workspaces" },
+          ]},
+        { id: "Req 6 · 11.3", title: "Vulnerability management", status: "fail", pts: 4, max: 20,
+          checks: [
+            { s: "fail", t: "No critical CVEs (CVSS ≥ 7)", d: "23 found on 17 hosts" },
+            { s: "fail", t: "Fix version available & pending", d: "19/41 CVEs unpatched > 90 days" },
+            { s: "warn", t: "Scan freshness ≤ 30 days", d: "last scan 24 days ago" },
+          ]},
+        { id: "Req 7", title: "Need-to-know access", status: "warn", pts: 10, max: 20,
+          checks: [
+            { s: "warn", t: "Protocol/port specificity", d: "44% of policies explicit" },
+            { s: "warn", t: "DENY rules present", d: "3 DENY policies" },
+            { s: "fail", t: "No ANY-ANY allow rules", d: "9 found across 6 workspaces" },
+          ]},
+        { id: "Req 10", title: "Monitoring & logging", status: "fail", pts: 9, max: 20,
+          checks: [
+            { s: "fail", t: "Agent coverage", d: "71.2% vs 95% target" },
+            { s: "warn", t: "Agent check-in < 24 h", d: "81% of agents" },
+            { s: "pass", t: "Flow telemetry enabled", d: "active agents OK" },
+          ]},
+        { id: "Req 11.4.4", title: "Segmentation verification", status: "warn", pts: 7, max: 15,
+          checks: [
+            { s: "warn", t: "Policy analysis enabled", d: "6/11 workspaces" },
+            { s: "warn", t: "Analyzed version present", d: "6/11 workspaces" },
+            { s: "fail", t: "Enforced version current", d: "2/11 workspaces" },
+          ]},
+      ],
+      workspaces: [
+        { n: "CORE-Web-Frontend", e: "No", c: "ALLOW", p: 4, a: "—", s: "fail", sl: "Fail" },
+        { n: "CORE-Auth-Service", e: "Yes", c: "DENY", p: 16, a: "v6", s: "pass", sl: "OK" },
+        { n: "CORE-Shared-Cache", e: "No", c: "ALLOW", p: 2, a: "—", s: "fail", sl: "Fail" },
+        { n: "CORE-Message-Bus", e: "Yes", c: "ALLOW", p: 11, a: "v3", s: "warn", sl: "Warn" },
+        { n: "CORE-Batch-Jobs", e: "No", c: "ALLOW", p: 0, a: "—", s: "fail", sl: "Fail" },
+        { n: "CORE-Observability", e: "No", c: "ALLOW", p: 5, a: "v1", s: "fail", sl: "Fail" },
+      ],
+      cves: [
+        { h: "web-fe-04", cve: "CVE-2025-32433", sev: "fail", sl: "Critical", cvss: "10.0", pkg: "erlang-otp", fix: "27.3.3" },
+        { h: "cache-01", cve: "CVE-2024-6387", sev: "warn", sl: "High", cvss: "8.1", pkg: "openssh", fix: "9.8p1" },
+        { h: "bus-02", cve: "CVE-2023-44487", sev: "warn", sl: "High", cvss: "7.5", pkg: "nginx", fix: "1.25.3" },
+        { h: "batch-07", cve: "CVE-2021-44228", sev: "fail", sl: "Critical", cvss: "10.0", pkg: "log4j-core", fix: "2.17.1" },
+        { h: "obs-01", cve: "CVE-2025-1094", sev: "warn", sl: "High", cvss: "8.1", pkg: "postgresql", fix: "17.3" },
+        { h: "web-fe-09", cve: "CVE-2024-3094", sev: "fail", sl: "Critical", cvss: "10.0", pkg: "xz-utils", fix: "5.6.2" },
+      ],
+      noAgent: 119,
+      noAgentRows: [
+        { h: "web-fe-12", ip: "10.31.0.24", os: "Amazon Linux 2", v: "CLOUD", f: "2026-03-02" },
+        { h: "cache-04", ip: "10.31.2.8", os: "Ubuntu 22.04", v: "CLOUD", f: "2026-02-11" },
+        { h: "bus-05", ip: "10.31.3.19", os: "RHEL 8.9", v: "CLOUD", f: "2025-12-01" },
+        { h: "batch-11", ip: "10.31.6.40", os: "Windows Server 2019", v: "CLOUD", f: "2025-09-23" },
+        { h: "obs-02", ip: "10.31.8.3", os: "Ubuntu 20.04", v: "CLOUD", f: "2026-04-18" },
+        { h: "k8s-node-17", ip: "10.31.9.77", os: "Bottlerocket", v: "CLOUD", f: "2026-05-30" },
+      ],
+      noAgentNote: "Showing 6 of 119 — full list included in the evidence CSV.",
+      summary: {
+        text: "The CLOUD:CORE scope is not ready for a PCI assessment (38/100). Only 2 of 11 workspaces enforce policy, 29% of workloads have no agent, and 23 critical CVEs are open. If any cardholder data flows traverse this scope, treat it as in-scope and currently unprotected — the priority is scoping first, then a staged enforcement rollout.",
+        recs: [
+          { req: "Req 1", tone: "fail", text: "Determine which CORE workspaces actually touch cardholder data, then run a staged enforcement rollout starting with <b>CORE-Web-Frontend</b> and <b>CORE-Shared-Cache</b>." },
+          { req: "Req 6 · 11.3", tone: "fail", text: "Open an emergency patch cycle: <b>19 criticals are unpatched for over 90 days</b>. Prioritize the log4j-core and erlang-otp instances (CVSS 10.0)." },
+          { req: "Req 7", tone: "warn", text: "Remove the <b>9 ANY-ANY allow rules</b>; derive port-specific replacements from 30 days of flow telemetry before enforcing." },
+          { req: "Req 10", tone: "fail", text: "Deploy agents to the <b>119 uncovered workloads</b> (sample below), starting with subnets that carry payment traffic." },
+          { req: "Req 11.4.4", tone: "warn", text: "Enable policy analysis on the <b>5 workspaces</b> without it — without analyzed versions the segmentation test has no baseline to verify." },
+        ],
+      },
+      evidence: "pci_evidence_20260709_1451.csv",
+    },
+  };
+
+  const TONE_COLOR = { pass: "var(--green)", warn: "var(--yellow)", fail: "var(--red)", info: "var(--blue)" };
+  const $ = (id) => document.getElementById(id);
+  const CIRC = 2 * Math.PI * 62;
+
+  function badge(status, label) {
+    return `<span class="badge ${status}"><span class="dot ${status === "pass" ? "ok" : status}"></span>${label}</span>`;
+  }
+
+  function render(ds) {
+    // Gauge
+    const g = $("gauge");
+    g.style.stroke = TONE_COLOR[ds.level.tone];
+    g.setAttribute("stroke-dasharray", CIRC);
+    g.setAttribute("stroke-dashoffset", CIRC * (1 - ds.score / 100));
+    $("score").textContent = ds.score;
+    const chip = $("level");
+    chip.className = "level-chip " + ds.level.tone;
+    chip.querySelector(".dot").className = "dot " + (ds.level.tone === "pass" ? "ok" : ds.level.tone);
+    $("level-label").textContent = ds.level.label;
+    $("scope-echo").textContent = ds.scopeName;
+
+    // KPIs
+    $("kpis").innerHTML = ds.kpis.map(k => `
+      <div class="card kpi">
+        <span class="eyebrow">${k.label}</span>
+        <span class="metric">${k.value}</span>
+        <span class="kpi-sub"><span class="dot ${k.tone === "pass" ? "ok" : k.tone}"></span>${k.sub}</span>
+      </div>`).join("");
+
+    // Requirement cards
+    $("reqs").innerHTML = ds.reqs.map(r => `
+      <div class="card">
+        <div class="req-head">
+          <div>
+            <span class="eyebrow">${r.id}</span>
+            <div class="req-title">${r.title}</div>
+          </div>
+          ${badge(r.status, r.status === "pass" ? "Pass" : r.status === "warn" ? "Warn" : "Fail")}
+        </div>
+        <div class="pts">${r.pts} / ${r.max} pts</div>
+        <div class="bar ${r.status}"><i style="width:${Math.round(100 * r.pts / r.max)}%"></i></div>
+        <div class="checks">
+          ${r.checks.map(c => `
+            <div class="check">
+              <span class="dot ${c.s === "pass" ? "ok" : c.s}"></span>
+              <span>${c.t} — <b>${c.d}</b></span>
+            </div>`).join("")}
+        </div>
+      </div>`).join("");
+
+    // Workspaces table
+    $("ws-table").querySelector("tbody").innerHTML = ds.workspaces.map(w => `
+      <tr>
+        <td>${w.n}</td><td>${w.e}</td><td>${w.c}</td>
+        <td class="num">${w.p}</td><td>${w.a}</td>
+        <td>${badge(w.s, w.sl)}</td>
+      </tr>`).join("");
+
+    // CVE table
+    const cveBody = $("cve-table").querySelector("tbody");
+    cveBody.innerHTML = ds.cves.length
+      ? ds.cves.map(v => `
+        <tr>
+          <td>${v.h}</td><td><span class="mono">${v.cve}</span></td>
+          <td>${badge(v.sev, v.sl)}</td>
+          <td class="num">${v.cvss}</td><td><span class="mono">${v.pkg}</span></td><td>${v.fix}</td>
+        </tr>`).join("")
+      : `<tr class="empty-row"><td colspan="6">No critical CVEs found in this scope.</td></tr>`;
+
+    // Workloads-without-agent table
+    const naBody = $("noagent-table").querySelector("tbody");
+    naBody.innerHTML = ds.noAgentRows.length
+      ? ds.noAgentRows.map(w => `
+        <tr>
+          <td>${w.h}</td><td><span class="mono">${w.ip}</span></td>
+          <td>${w.os}</td><td>${w.v}</td><td>${w.f}</td>
+        </tr>`).join("")
+      : `<tr class="empty-row"><td colspan="5">All workloads in this scope have an active agent.</td></tr>`;
+    $("noagent-note").textContent = ds.noAgentNote;
+
+    // Reset the AI panel — a new assessment needs a fresh summary
+    hideAiPanel();
+
+    // Footer meta
+    $("meta").innerHTML =
+      `Assessment generated <b style="color:var(--text-2)">2026-07-09 14:32 UTC</b> ·
+       deterministic engine v1 (mock) ·
+       ${ds.noAgent} workload${ds.noAgent === 1 ? "" : "s"} without agent
+       · evidence file <code>${ds.evidence}</code>`;
+  }
+
+  // ── Interactions ───────────────────────────────────────────────────────────
+  let toastTimer;
+  function toast(msg) {
+    $("toast-msg").textContent = msg;
+    $("toast").classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $("toast").classList.remove("show"), 3200);
+  }
+
+  $("run").addEventListener("click", () => {
+    const btn = $("run");
+    btn.disabled = true;
+    btn.classList.add("running");
+    $("run-label").textContent = "Assessing…";
+    setTimeout(() => {
+      render(DATASETS[$("scope").value]);
+      btn.disabled = false;
+      btn.classList.remove("running");
+      $("run-label").textContent = "Run assessment";
+      toast("Assessment completed for " + DATASETS[$("scope").value].scopeName + " (mock data).");
+    }, 850);
+  });
+
+  $("export").addEventListener("click", () => {
+    toast("Evidence exported: " + DATASETS[$("scope").value].evidence + " (mock — real CSV in implementation).");
+  });
+
+  // ── Executive summary (simulated Claude streaming) ─────────────────────────
+  let aiTypeTimer, aiRecTimers = [];
+
+  function hideAiPanel() {
+    clearInterval(aiTypeTimer);
+    aiRecTimers.forEach(clearTimeout);
+    aiRecTimers = [];
+    $("ai-panel").hidden = true;
+    $("ai-text").innerHTML = "";
+    $("ai-recs").innerHTML = "";
+  }
+
+  function revealRecs(recs) {
+    $("ai-recs").innerHTML = recs.map(r => `
+      <div class="rec">
+        <span class="req-tag"><span class="dot ${r.tone === "pass" ? "ok" : r.tone}"></span>${r.req}</span>
+        <span>${r.text}</span>
+      </div>`).join("");
+    [...$("ai-recs").children].forEach((el, i) => {
+      aiRecTimers.push(setTimeout(() => el.classList.add("in"), 140 * (i + 1)));
+    });
+  }
+
+  $("ai-summary").addEventListener("click", () => {
+    const ds = DATASETS[$("scope").value];
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    hideAiPanel();
+    const panel = $("ai-panel");
+    panel.hidden = false;
+    $("ai-time").textContent = "2026-07-09 14:33 UTC · mock";
+    panel.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "nearest" });
+
+    if (reduced) {
+      $("ai-text").textContent = ds.summary.text;
+      revealRecs(ds.summary.recs);
+      $("ai-recs").querySelectorAll(".rec").forEach(el => el.classList.add("in"));
+      return;
+    }
+    // Typewriter for the summary paragraph, then staggered recommendations
+    const text = ds.summary.text;
+    let i = 0;
+    const textEl = $("ai-text");
+    aiTypeTimer = setInterval(() => {
+      i = Math.min(i + 3, text.length);
+      textEl.innerHTML = text.slice(0, i) + (i < text.length ? '<span class="caret"></span>' : "");
+      if (i >= text.length) {
+        clearInterval(aiTypeTimer);
+        revealRecs(ds.summary.recs);
+      }
+    }, 12);
+  });
+
+  // Initial render with the suggested CDE scope
+  render(DATASETS.cde);
+</script>
+</body>
+</html>

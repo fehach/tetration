@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "echo 'Static demo — no build step'",
+  "outputDirectory": "demo",
+  "cleanUrls": true,
+  "trailingSlash": false
+}
